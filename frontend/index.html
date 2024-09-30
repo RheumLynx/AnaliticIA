@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RheumPal 2.0 Lab consultor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #resultado {
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .warning {
+            color: orange;
+            margin-top: 10px;
+        }
+        .pcr-container {
+            display: flex;
+            align-items: center;
+        }
+        .pcr-container input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .pcr-container select {
+            width: auto;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RheumPal 2.0 Lab consultor</h1>
+        <form id="labForm">
+            <label for="pcr">Proteína C Reactiva (PCR):</label>
+            <div class="pcr-container">
+                <input type="number" id="pcr" step="0.01" required>
+                <select id="pcrUnit">
+                    <option value="mg/L">mg/L</option>
+                    <option value="mg/dL">mg/dL</option>
+                </select>
+            </div>
+            
+            <label for="vsg">Velocidad de Sedimentación Globular (VSG) mm/h:</label>
+            <input type="number" id="vsg" required>
+            
+            <label for="factorReumatoide">Factor Reumatoide UI/mL:</label>
+            <input type="number" id="factorReumatoide" step="0.1" required>
+            
+            <label for="ana">Anticuerpos Antinucleares (ANA):</label>
+            <select id="ana" required>
+                <option value="">Seleccione un valor</option>
+                <option value="Negativo">Negativo</option>
+                <option value="40">1:40</option>
+                <option value="80">1:80</option>
+                <option value="160">1:160</option>
+                <option value="320">1:320</option>
+                <option value="640">1:640</option>
+                <option value="1280">1:1280</option>
+            </select>
+            
+            <label for="patronANA" id="patronANALabel" class="hidden">Patrón ANA:</label>
+            <select id="patronANA" class="hidden">
+                <option value="">Seleccione un patrón</option>
+                <!-- Opciones de patrón ANA -->
+                <!-- ... (las opciones existentes) ... -->
+            </select>
+            
+            <button type="submit">Analizar</button>
+        </form>
+        <div id="error" class="error"></div>
+        <div id="warning" class="warning"></div>
+        <div id="resultado"></div>
+
+        <!-- Elementos para carga de PDF y obtención de historial -->
+        <label for="pdfUpload">Subir PDF para analizar:</label>
+        <input type="file" id="pdfUpload" accept="application/pdf">
+
+        <button id="getHistoryButton">Obtener historial de análisis</button>
+    </div>
+
+    <script>
+        const form = document.getElementById('labForm');
+        const errorDiv = document.getElementById('error');
+        const warningDiv = document.getElementById('warning');
+        const anaSelect = document.getElementById('ana');
+        const patronANASelect = document.getElementById('patronANA');
+        const patronANALabel = document.getElementById('patronANALabel');
+        
+        const patronesANA = {
+            // ... (el objeto patronesANA existente) ...
+        };
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // ... (el código existente para manejar el formulario) ...
+        });
+
+        anaSelect.addEventListener('change', function() {
+            if (parseInt(this.value) >= 160) {
+                patronANASelect.classList.remove('hidden');
+                patronANALabel.classList.remove('hidden');
+                patronANASelect.required = true;
+            } else {
+                patronANASelect.classList.add('hidden');
+                patronANALabel.classList.add('hidden');
+                patronANASelect.required = false;
+                patronANASelect.value = "";
+            }
+        });
+
+        // Función para analizar un PDF
+        async function analyzePDF(file) {
+          const formData = new FormData();
+          formData.append('file', file);
+        
+          try {
+            const response = await fetch('http://127.0.0.1:5000/api/analyze-pdf', {
+              method: 'POST',
+              body: formData
+            });
+        
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        
+            const result = await response.json();
+            console.log('Análisis completado:', result);
+            // Aquí puedes actualizar tu UI con el resultado
+            document.getElementById('resultado').innerText = JSON.stringify(result, null, 2);
+            return result;
+          } catch (error) {
+            console.error('Error al analizar el PDF:', error);
+            // Mostrar error en la interfaz de usuario
+            document.getElementById('error').innerText = "Error al analizar el PDF: " + error.message;
+            throw error;
+          }
+        }
+        
+        // Función para obtener el historial de análisis
+        async function getAnalysisHistory() {
+          try {
+            const response = await fetch('http://127.0.0.1:5000/api/analysis-history');
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        
+            const history = await response.json();
+            console.log('Historial de análisis:', history);
+            // Aquí puedes actualizar tu UI con el historial
+            document.getElementById('resultado').innerText = JSON.stringify(history, null, 2);
+            return history;
+          } catch (error) {
+            console.error('Error al obtener el historial de análisis:', error);
+            document.getElementById('error').innerText = "Error al obtener el historial: " + error.message;
+            throw error;
+          }
+        }
+        
+        // Ejemplo de uso:
+        document.getElementById('pdfUpload').addEventListener('change', async (event) => {
+          const file = event.target.files[0];
+          if (file) {
+            try {
+              const result = await analyzePDF(file);
+              // Aquí puedes actualizar tu UI con el resultado
+            } catch (error) {
+              // Maneja el error (por ejemplo, mostrando un mensaje al usuario)
+            }
+          }
+        });
+        
+        document.getElementById('getHistoryButton').addEventListener('click', async () => {
+          try {
+            const history = await getAnalysisHistory();
+            // Aquí puedes actualizar tu UI con el historial
+          } catch (error) {
+            // Maneja el error (por ejemplo, mostrando un mensaje al usuario)
+          }
+        });
+    </script>
+</body>
+</html>
