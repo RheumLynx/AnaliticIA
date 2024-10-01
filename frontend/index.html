@@ -169,7 +169,7 @@
             },
             "AC-2": {
                 antigenosAsociados: "DFS70/LEDGF",
-                enfermedadesAsociadas: "Raro en Sjogren (Sj), LES, y Esclerosis sistémica (ES)"
+                enfermedadesAsociadas: "Raro en Sjögren (Sj), LES y Esclerosis Sistémica (ES)"
             },
             "AC-3": {
                 antigenosAsociados: "CENP-A/B",
@@ -193,7 +193,7 @@
             },
             "AC-8": {
                 antigenosAsociados: "PM/Scl-75, PM/Scl-100, Th/To, B23/nucleofosmina, nucleolina, No55/SC65",
-                enfermedadesAsociadas: "ES, ES/PM overlap"
+                enfermedadesAsociadas: "ES, solapamiento ES/PM"
             },
             "AC-9": {
                 antigenosAsociados: "U3snoRNP/fibrilarina",
@@ -204,11 +204,11 @@
                 enfermedadesAsociadas: "ES, SSj"
             },
             "AC-11": {
-                antigenosAsociados: "Láminas A,B,C, o proteínas asociadas con las láminas",
+                antigenosAsociados: "Láminas A, B, C, o proteínas asociadas con las láminas",
                 enfermedadesAsociadas: "LES, SSj, artritis seronegativa"
             },
             "AC-12": {
-                antigenosAsociados: "Complejo de proteínas de los poros nucleares. Ej. gp210",
+                antigenosAsociados: "Complejo de proteínas de los poros nucleares, e.g., gp210",
                 enfermedadesAsociadas: "CBP"
             },
             "AC-13": {
@@ -221,11 +221,11 @@
             },
             "AC-15": {
                 antigenosAsociados: "Actina, miosina no muscular",
-                enfermedadesAsociadas: "EMTC, hepatitis crónica activa, miastenia gravis, enfermedad de Crohn, CBP, hemodiálisis de largo plazo, raro en EAS"
+                enfermedadesAsociadas: "EMTC, hepatitis crónica activa, miastenia gravis, enfermedad de Crohn, CBP, hemodiálisis a largo plazo, raro en EAS"
             },
             "AC-16": {
                 antigenosAsociados: "Vimentina, citoqueratina, tropomiosina",
-                enfermedadesAsociadas: "Enfermedades infecciosas o inflamatorias, hemodiálisis de largo plazo, enfermedad hepática por alcohol, EAS, Psoriasis y sujetos sanos"
+                enfermedadesAsociadas: "Enfermedades infecciosas o inflamatorias, hemodiálisis a largo plazo, enfermedad hepática por alcohol, EAS, psoriasis y sujetos sanos"
             },
             "AC-17": {
                 antigenosAsociados: "Actina alfa, vinculina",
@@ -237,18 +237,18 @@
             },
             "AC-19": {
                 antigenosAsociados: "PL-7, PL-12, Proteína P ribosomal",
-                enfermedadesAsociadas: "Síndrome antisintetasa, PM/DM, LES, LES juvenil LES neuropsiquiátrico"
+                enfermedadesAsociadas: "Síndrome antisintetasa, PM/DM, LES, LES juvenil, LES neuropsiquiátrico"
             },
             "AC-20": {
-                antigenosAsociados: "Jo-1/ sintetasa del Histidil del ARNt",
+                antigenosAsociados: "Jo-1/sintetasa del histidil-ARNt",
                 enfermedadesAsociadas: "Síndrome antisintetasa, PM/DM, ES limitada, derrame pleural idiopático"
             },
             "AC-21": {
-                antigenosAsociados: "PDC-E2/M2, BCOADC-E2, OGDC-E2, subunidad E1alfa de PDC, E3BP/proteína X",
+                antigenosAsociados: "PDC-E2/M2, BCOADC-E2, OGDC-E2, subunidad E1α de PDC, E3BP/proteína X",
                 enfermedadesAsociadas: "Común en CBP, ES generalizada, raro en otras EAS"
             },
             "AC-22": {
-                antigenosAsociados: "Giantina/macrogolgina, golgin-95/GM130, Golgina-160, golgina-97, golgina 245",
+                antigenosAsociados: "Giantina/macrogolgina, golgina-95/GM130, golgina-160, golgina-97, golgina-245",
                 enfermedadesAsociadas: "Raro en SSj, LES, AR, EMTC, PAG, ataxia cerebelar idiopática, degeneración cerebelar paraneoplásica, infecciones virales"
             },
             "AC-23": {
@@ -268,7 +268,7 @@
                 enfermedadesAsociadas: "SSj, LES, otras"
             },
             "AC-27": {
-                antigenosAsociados: "-",
+                antigenosAsociados: "Desconocido",
                 enfermedadesAsociadas: "Raro en ES, fenómeno de Raynaud, tumores malignos"
             },
             "AC-28": {
@@ -279,8 +279,131 @@
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            // ... (el código existente para manejar el formulario) ...
-            // (El resto del código JavaScript permanece igual)
+            
+            const pcr = parseFloat(document.getElementById('pcr').value);
+            const pcrUnit = document.getElementById('pcrUnit').value;
+            const vsg = parseFloat(document.getElementById('vsg').value);
+            const factorReumatoide = parseFloat(document.getElementById('factorReumatoide').value);
+            const ana = anaSelect.value;
+            const patronANA = patronANASelect.value;
+            
+            // Verificar si todos los campos requeridos están llenos
+            if (isNaN(pcr) || isNaN(vsg) || isNaN(factorReumatoide) || !ana) {
+                errorDiv.innerText = "Por favor, complete todos los campos requeridos antes de analizar.";
+                document.getElementById('resultado').innerText = "";
+                return;
+            }
+            
+            // Si ANA es 1:160 o superior, se requiere el patrón ANA
+            if (parseInt(ana) >= 160 && !patronANA) {
+                errorDiv.innerText = "Por favor, seleccione un patrón ANA para resultados de ANA de 1:160 o superiores.";
+                document.getElementById('resultado').innerText = "";
+                return;
+            }
+            
+            errorDiv.innerText = ""; // Limpiar mensajes de error previos
+            warningDiv.innerText = ""; // Limpiar mensajes de advertencia previos
+            
+            let warnings = [];
+            
+            // Verificar valores fuera de rango
+            if (pcr < 0) warnings.push("El valor de PCR no puede ser negativo.");
+            if (vsg < 0) warnings.push("El valor de VSG no puede ser negativo.");
+            if (factorReumatoide < 0) warnings.push("El valor de Factor Reumatoide no puede ser negativo.");
+            
+            if (warnings.length > 0) {
+                warningDiv.innerText = "Advertencias:\n" + warnings.join("\n");
+            }
+            
+            let resultado = "Resultados del análisis:\n\n";
+            
+            // PCR
+            let pcrMgL = pcr;
+            if (pcrUnit === "mg/dL") {
+                pcrMgL = pcr * 10; // Convertir de mg/dL a mg/L
+            }
+            resultado += `PCR: ${pcr} ${pcrUnit} (${pcrMgL.toFixed(2)} mg/L) - `;
+            if (pcrMgL < 5) {
+                resultado += "Normal\n";
+            } else {
+                resultado += "Elevado (puede indicar inflamación)\n";
+            }
+            
+            // VSG
+            resultado += `VSG: ${vsg} mm/h - `;
+            if (vsg < 20) {
+                resultado += "Normal\n";
+            } else {
+                resultado += "Elevado (puede indicar inflamación o infección)\n";
+            }
+            
+            // Factor Reumatoide
+            resultado += `Factor Reumatoide: ${factorReumatoide} UI/mL - `;
+            if (factorReumatoide < 14) {
+                resultado += "Negativo\n";
+            } else {
+                resultado += "Positivo (puede estar asociado con artritis reumatoide)\n";
+            }
+            
+            // ANA
+            resultado += `ANA: ${ana} - `;
+            if (ana === "Negativo" || parseInt(ana) < 40) {
+                resultado += "Negativo\n";
+            } else {
+                resultado += `Positivo (título ${ana})\n`;
+                if (parseInt(ana) >= 160 && patronANA) {
+                    resultado += `Patrón ANA: ${patronANA}\n`;
+                    resultado += `Antígenos asociados: ${patronesANA[patronANA].antigenosAsociados}\n`;
+                    resultado += `Enfermedades asociadas: ${patronesANA[patronANA].enfermedadesAsociadas}\n`;
+                }
+            }
+            
+            // Conclusiones
+            resultado += "\nConclusiones:\n";
+            
+            if (pcrMgL >= 5 || vsg >= 20) {
+                resultado += "- Hay evidencia de inflamación sistémica.\n";
+            }
+            
+            if (factorReumatoide >= 14) {
+                resultado += "- El Factor Reumatoide positivo sugiere la posibilidad de artritis reumatoide u otra enfermedad autoinmune.\n";
+            }
+            
+            if (ana !== "Negativo" && parseInt(ana) >= 40) {
+                resultado += "- Los ANA positivos sugieren la posibilidad de una enfermedad autoinmune sistémica.\n";
+                
+                if (parseInt(ana) >= 160 && patronANA) {
+                    resultado += `- El patrón ANA ${patronANA} está asociado con los siguientes antígenos y enfermedades:\n`;
+                    resultado += `  Antígenos: ${patronesANA[patronANA].antigenosAsociados}\n`;
+                    resultado += `  Enfermedades: ${patronesANA[patronANA].enfermedadesAsociadas}\n`;
+                }
+            }
+            
+            if (pcrMgL < 5 && vsg < 20 && factorReumatoide < 14 && (ana === "Negativo" || parseInt(ana) < 40)) {
+                resultado += "- Los resultados están dentro de los rangos normales y no sugieren un proceso inflamatorio o autoinmune activo.\n";
+                resultado += "- Descartar derivación a Reumatología o Medicina Interna, no signos de actividad inflamatoria o autoinmune.\n";
+            }
+            
+            resultado += "\nSe recomienda interpretar estos resultados en el contexto clínico del paciente y considerar pruebas adicionales o consulta con un reumatólogo si es necesario.";
+
+            resultado += "\n\nAbreviaturas:";
+            resultado += "\nLES: Lupus Eritematoso Sistémico";
+            resultado += "\nSj: Síndrome de Sjögren";
+            resultado += "\nES: Esclerosis Sistémica";
+            resultado += "\nCBP: Cirrosis Biliar Primaria";
+            resultado += "\nEMTC: Enfermedad Mixta del Tejido Conectivo";
+            resultado += "\nEAS: Enfermedad Autoinmune Sistémica";
+            resultado += "\nPM: Polimiositis";
+            resultado += "\nDM: Dermatomiositis";
+            resultado += "\nSSj: Síndrome de Sjögren";
+            resultado += "\nAR: Artritis Reumatoide";
+            resultado += "\nPAG: Patrón Anti-Golgi";
+            resultado += "\nVHC: Virus de la Hepatitis C";
+            resultado += "\nIFN: Interferón";
+            resultado += "\nLED: Lupus Eritematoso Discoide";
+            resultado += "\nLLC: Leucemia Linfocítica Crónica";
+            
+            document.getElementById('resultado').innerText = resultado;
         });
 
         anaSelect.addEventListener('change', function() {
@@ -296,8 +419,76 @@
             }
         });
 
-        // Funciones para analizar PDF y obtener historial
-        // ... (el resto del código JavaScript permanece igual) ...
+        // Función para analizar un PDF
+        async function analyzePDF(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+          
+            try {
+                const response = await fetch('/api/analyze-pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+          
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+          
+                const result = await response.json();
+                console.log('Análisis completado:', result);
+                // Actualizar la UI con el resultado
+                document.getElementById('resultado').innerText = JSON.stringify(result, null, 2);
+                return result;
+            } catch (error) {
+                console.error('Error al analizar el PDF:', error);
+                document.getElementById('error').innerText = "Error al analizar el PDF: " + error.message;
+                throw error;
+            }
+        }
+        
+        // Función para obtener el historial de análisis
+        async function getAnalysisHistory() {
+            try {
+                const response = await fetch('/api/analysis-history');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+          
+                const history = await response.json();
+                console.log('Historial de análisis:', history);
+                // Actualizar la UI con el historial
+                document.getElementById('resultado').innerText = JSON.stringify(history, null, 2);
+                return history;
+            } catch (error) {
+                console.error('Error al obtener el historial de análisis:', error);
+                document.getElementById('error').innerText = "Error al obtener el historial: " + error.message;
+                throw error;
+            }
+        }
+        
+        // Event listeners para los nuevos elementos
+        document.getElementById('pdfUpload').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    const result = await analyzePDF(file);
+                    // Actualizar la UI con el resultado
+                } catch (error) {
+                    // Manejo de errores ya implementado en analyzePDF
+                }
+            }
+        });
+        
+        document.getElementById('getHistoryButton').addEventListener('click', async () => {
+            try {
+                const history = await getAnalysisHistory();
+                // Actualizar la UI con el historial
+            } catch (error) {
+                // Manejo de errores ya implementado en getAnalysisHistory
+            }
+        });
     </script>
 </body>
 </html>
+
