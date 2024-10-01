@@ -162,7 +162,7 @@
           formData.append('file', file);
         
           try {
-            const response = await fetch('http://127.0.0.1:5000/api/analyze-pdf', {
+            const response = await fetch('/api/analyze-pdf', {
               method: 'POST',
               body: formData
             });
@@ -187,7 +187,7 @@
         // Función para obtener el historial de análisis
         async function getAnalysisHistory() {
           try {
-            const response = await fetch('http://127.0.0.1:5000/api/analysis-history');
+            const response = await fetch('/api/analysis-history');
             
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
