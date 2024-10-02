@@ -28,12 +28,20 @@ def interpret_lab_results(values):
     Explicación: [Tu explicación aquí]
     """
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "Eres un asistente médico especializado en interpretar resultados de laboratorio relacionados con enfermedades reumáticas."},
-            {"role": "user", "content": prompt}
-        ]
-    )
-    
-    return response.choices[0].message['content']
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Eres un asistente médico especializado en interpretar resultados de laboratorio relacionados con enfermedades reumáticas."
+                },
+                {"role": "user", "content": prompt}
+            ]
+        )
+        # Acceder al contenido de la respuesta con la nueva sintaxis
+        return response.choices[0].message.content
+    except openai.error.OpenAIError as e:
+        # Manejar el error según sea necesario
+        print(f"Error al llamar a la API de OpenAI: {e}")
+        return "Lo siento, ocurrió un error al procesar su solicitud."
