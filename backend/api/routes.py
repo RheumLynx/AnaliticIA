@@ -23,26 +23,38 @@ def analyze_pdf():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-        
-        # Extraer texto del PDF
-        text = pdf_service.extract_text_from_pdf(filepath)
-        
-        # Extraer valores relevantes
-        lab_result = pdf_service.extract_lab_values(text)
-        
-        # Interpretar resultados con OpenAI
-        analysis = openai_service.interpret_lab_results(lab_result)
-        
-        # Guardar el análisis en el historial
-        analysis_history.append(analysis)
-        
-        # Limpiar el archivo después de procesarlo
-        os.remove(filepath)
-        
-        return jsonify(analysis.to_dict())
-    return jsonify({"error": "File type not allowed"}), 400
+        try:
+            file.save(filepath)
+            
+            # Extraer texto del PDF
+            text = pdf_service.extract_text_from_pdf(filepath)
+            
+            # Extraer valores relevantes
+            lab_result = pdf_service.extract_lab_values(text)
+            
+            if not lab_result:
+                return jsonify({"error": "No se pudieron extraer los valores del PDF"}), 400
+            
+            # Interpretar resultados con OpenAI
+            analysis = openai_service.interpret_lab_results(lab_result)
+            
+            if analysis is None:
+                return jsonify({"error": "Error al interpretar los resultados"}), 500
+            
+            # Guardar el análisis en el historial
+            analysis_history.append(analysis)
+            
+            return jsonify(analysis.to_dict()), 200
+        except Exception as e:
+            print(f"Error en analyze_pdf: {e}")
+            return jsonify({"error": "Error interno del servidor"}), 500
+        finally:
+            # Limpiar el archivo después de procesarlo
+            if os.path.exists(filepath):
+                os.remove(filepath)
+    else:
+        return jsonify({"error": "File type not allowed"}), 400
 
 @api.route('/analysis-history', methods=['GET'])
 def get_analysis_history():
-    return jsonify([analysis.to_dict() for analysis in analysis_history])
+    return jsonify([analysis.to_dict() for analysis in analysis_history]), 200

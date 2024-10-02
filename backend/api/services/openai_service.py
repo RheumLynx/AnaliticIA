@@ -45,3 +45,4 @@ def interpret_lab_results(values):
         # Manejar el error según sea necesario
         print(f"Error al llamar a la API de OpenAI: {e}")
         return "Lo siento, ocurrió un error al procesar su solicitud."
+
