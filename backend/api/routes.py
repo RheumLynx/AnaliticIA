@@ -1,5 +1,4 @@
-from flask import jsonify, request, current_app
-from api import api
+from flask import Blueprint, jsonify, request, current_app
 from api.services import pdf_service, openai_service
 from api.models import LabResult, Analysis
 from werkzeug.utils import secure_filename
@@ -10,16 +9,19 @@ ALLOWED_EXTENSIONS = {'pdf'}
 # Lista para almacenar el historial de análisis (en una aplicación real, usarías una base de datos)
 analysis_history = []
 
+# Definir el Blueprint
+api_bp = Blueprint('api', __name__)
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@api.route('/analyze-pdf', methods=['POST'])
+@api_bp.route('/analyze-pdf', methods=['POST'])
 def analyze_pdf():
     if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
+        return jsonify({"error": "No se encontró el archivo en la solicitud."}), 400
     file = request.files['file']
     if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
+        return jsonify({"error": "No se seleccionó ningún archivo."}), 400
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
@@ -53,8 +55,9 @@ def analyze_pdf():
             if os.path.exists(filepath):
                 os.remove(filepath)
     else:
-        return jsonify({"error": "File type not allowed"}), 400
+        return jsonify({"error": "Tipo de archivo no permitido"}), 400
 
-@api.route('/analysis-history', methods=['GET'])
+@api_bp.route('/analysis-history', methods=['GET'])
 def get_analysis_history():
     return jsonify([analysis.to_dict() for analysis in analysis_history]), 200
+

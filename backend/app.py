@@ -9,16 +9,17 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     
     # Definir la ruta de la carpeta 'uploads'
-    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+    app_root = os.path.abspath(os.path.dirname(__file__))
+    app.config['UPLOAD_FOLDER'] = os.path.join(app_root, 'uploads')
     
     # Crear la carpeta 'uploads' si no existe
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-
-    # Registrar los blueprints o rutas de la API
+    
+    # Importar y registrar el blueprint
     from api.routes import api_bp
     app.register_blueprint(api_bp)
-
+    
     # Servir el frontend
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
@@ -27,12 +28,12 @@ def create_app(config_class=Config):
             return send_from_directory(app.static_folder, path)
         else:
             return send_from_directory(app.static_folder, 'index.html')
-
+    
     return app
 
+# Crear una instancia de la aplicación
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True)  # Establecer debug=False en producción
 
-# Crear una instancia de la aplicación para Gunicorn
-app = create_app()
