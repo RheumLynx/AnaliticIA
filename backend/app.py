@@ -16,9 +16,9 @@ def create_app(config_class=Config):
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     
-    # Importar y registrar el blueprint
+    # Importar y registrar el blueprint con prefijo '/api'
     from api.routes import api_bp
-    app.register_blueprint(api_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
     
     # Servir el frontend
     @app.route('/', defaults={'path': ''})
@@ -36,4 +36,5 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True)  # Establecer debug=False en producción
+
 

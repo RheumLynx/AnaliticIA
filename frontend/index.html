@@ -277,7 +277,7 @@
             }
         };
 
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const pcr = parseFloat(document.getElementById('pcr').value);
@@ -315,95 +315,36 @@
                 warningDiv.innerText = "Advertencias:\n" + warnings.join("\n");
             }
             
-            let resultado = "Resultados del análisis:\n\n";
-            
-            // PCR
-            let pcrMgL = pcr;
-            if (pcrUnit === "mg/dL") {
-                pcrMgL = pcr * 10; // Convertir de mg/dL a mg/L
-            }
-            resultado += `PCR: ${pcr} ${pcrUnit} (${pcrMgL.toFixed(2)} mg/L) - `;
-            if (pcrMgL < 5) {
-                resultado += "Normal\n";
-            } else {
-                resultado += "Elevado (puede indicar inflamación)\n";
-            }
-            
-            // VSG
-            resultado += `VSG: ${vsg} mm/h - `;
-            if (vsg < 20) {
-                resultado += "Normal\n";
-            } else {
-                resultado += "Elevado (puede indicar inflamación o infección)\n";
-            }
-            
-            // Factor Reumatoide
-            resultado += `Factor Reumatoide: ${factorReumatoide} UI/mL - `;
-            if (factorReumatoide < 14) {
-                resultado += "Negativo\n";
-            } else {
-                resultado += "Positivo (puede estar asociado con artritis reumatoide)\n";
-            }
-            
-            // ANA
-            resultado += `ANA: ${ana} - `;
-            if (ana === "Negativo" || parseInt(ana) < 40) {
-                resultado += "Negativo\n";
-            } else {
-                resultado += `Positivo (título ${ana})\n`;
-                if (parseInt(ana) >= 160 && patronANA) {
-                    resultado += `Patrón ANA: ${patronANA}\n`;
-                    resultado += `Antígenos asociados: ${patronesANA[patronANA].antigenosAsociados}\n`;
-                    resultado += `Enfermedades asociadas: ${patronesANA[patronANA].enfermedadesAsociadas}\n`;
-                }
-            }
-            
-            // Conclusiones
-            resultado += "\nConclusiones:\n";
-            
-            if (pcrMgL >= 5 || vsg >= 20) {
-                resultado += "- Hay evidencia de inflamación sistémica.\n";
-            }
-            
-            if (factorReumatoide >= 14) {
-                resultado += "- El Factor Reumatoide positivo sugiere la posibilidad de artritis reumatoide u otra enfermedad autoinmune.\n";
-            }
-            
-            if (ana !== "Negativo" && parseInt(ana) >= 40) {
-                resultado += "- Los ANA positivos sugieren la posibilidad de una enfermedad autoinmune sistémica.\n";
-                
-                if (parseInt(ana) >= 160 && patronANA) {
-                    resultado += `- El patrón ANA ${patronANA} está asociado con los siguientes antígenos y enfermedades:\n`;
-                    resultado += `  Antígenos: ${patronesANA[patronANA].antigenosAsociados}\n`;
-                    resultado += `  Enfermedades: ${patronesANA[patronANA].enfermedadesAsociadas}\n`;
-                }
-            }
-            
-            if (pcrMgL < 5 && vsg < 20 && factorReumatoide < 14 && (ana === "Negativo" || parseInt(ana) < 40)) {
-                resultado += "- Los resultados están dentro de los rangos normales y no sugieren un proceso inflamatorio o autoinmune activo.\n";
-                resultado += "- Descartar derivación a Reumatología o Medicina Interna, no signos de actividad inflamatoria o autoinmune.\n";
-            }
-            
-            resultado += "\nSe recomienda interpretar estos resultados en el contexto clínico del paciente y considerar pruebas adicionales o consulta con un reumatólogo si es necesario.";
+            // Preparar los datos para enviar al backend
+            const labData = {
+                pcr: pcr,
+                pcrUnit: pcrUnit,
+                vsg: vsg,
+                factorReumatoide: factorReumatoide,
+                ana: ana,
+                patronANA: patronANA
+            };
 
-            resultado += "\n\nAbreviaturas:";
-            resultado += "\nLES: Lupus Eritematoso Sistémico";
-            resultado += "\nSj: Síndrome de Sjögren";
-            resultado += "\nES: Esclerosis Sistémica";
-            resultado += "\nCBP: Cirrosis Biliar Primaria";
-            resultado += "\nEMTC: Enfermedad Mixta del Tejido Conectivo";
-            resultado += "\nEAS: Enfermedad Autoinmune Sistémica";
-            resultado += "\nPM: Polimiositis";
-            resultado += "\nDM: Dermatomiositis";
-            resultado += "\nSSj: Síndrome de Sjögren";
-            resultado += "\nAR: Artritis Reumatoide";
-            resultado += "\nPAG: Patrón Anti-Golgi";
-            resultado += "\nVHC: Virus de la Hepatitis C";
-            resultado += "\nIFN: Interferón";
-            resultado += "\nLED: Lupus Eritematoso Discoide";
-            resultado += "\nLLC: Leucemia Linfocítica Crónica";
-            
-            document.getElementById('resultado').innerText = resultado;
+            try {
+                const response = await fetch('/api/analyze-lab-results', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(labData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error en la solicitud: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('Análisis completado:', result);
+                document.getElementById('resultado').innerText = result.analysis;
+            } catch (error) {
+                console.error('Error al analizar los resultados de laboratorio:', error);
+                document.getElementById('error').innerText = "Error al analizar los resultados de laboratorio: " + error.message;
+            }
         });
 
         anaSelect.addEventListener('change', function() {
@@ -491,4 +432,3 @@
     </script>
 </body>
 </html>
-
