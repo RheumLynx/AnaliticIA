@@ -1,6 +1,7 @@
 from api.models import Analysis
 import openai
 from flask import current_app
+from openai.error import OpenAIError
 
 def interpret_lab_results(values):
     openai.api_key = current_app.config['OPENAI_API_KEY']
@@ -41,8 +42,7 @@ def interpret_lab_results(values):
         )
         # Acceder al contenido de la respuesta con la nueva sintaxis
         return response.choices[0].message.content
-    except openai.error.OpenAIError as e:
+    except OpenAIError as e:
         # Manejar el error según sea necesario
         print(f"Error al llamar a la API de OpenAI: {e}")
         return "Lo siento, ocurrió un error al procesar su solicitud."
-
